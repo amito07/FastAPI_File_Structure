@@ -8,3 +8,5 @@ client = MongoClient(f"mongodb+srv://{os.getenv('MONGODB_USER')}:{os.getenv('MON
 db = client.todo_db
 
 collection_name = db["todo_collection"]
+user_collection = db["user_collection"]
+

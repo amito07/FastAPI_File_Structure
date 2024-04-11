@@ -1,15 +1,16 @@
 import os
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Request
 from models.todos import Todo
+from authMiddlware.middlewareFunction import get_current_user
 
 from controllers.todoController import todo_list, create_todo
-router = APIRouter()
+router = APIRouter(tags=['Todo'])
 
 #GET Requests Method
 
-@router.get("/")
-async def get_todos():
-    return todo_list()
+@router.get("/", dependencies=[Depends(get_current_user)])
+async def get_todos(request: Request):
+    return todo_list(request)
 
 
 #POST Requests Method
