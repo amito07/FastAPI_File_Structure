@@ -16,4 +16,4 @@ async def createUser(user:SignUpBaseModel):
 
 @userRouter.post("/signIn") 
 async def loginUser(user:SignInModel):
-    return signInUser(user)
+    return await signInUser(user)

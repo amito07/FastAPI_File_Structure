@@ -7,12 +7,13 @@ from jose import jwt
 from config.database import user_collection
 
 security = HTTPBearer()
-def get_current_user(request: Request, token: HTTPAuthorizationCredentials = Depends(security)) -> Optional[str]:
+async def get_current_user(request: Request, token: HTTPAuthorizationCredentials = Depends(security)) -> Optional[str]:
     if not token:
         raise UnauthorizedError()
     
             
     bearer_token = token.credentials
+
 
     if bearer_token is None:
         raise UnauthorizedError()
@@ -22,7 +23,7 @@ def get_current_user(request: Request, token: HTTPAuthorizationCredentials = Dep
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token is expired")
 
-    user = user_collection.find_one({'email': payload['email']})
+    user = await user_collection.find_one({'email': payload['email']})
 
     if user is None:
         raise UnauthorizedError()

@@ -10,7 +10,8 @@ router = APIRouter(tags=['Todo'])
 
 @router.get("/", dependencies=[Depends(get_current_user)])
 async def get_todos(request: Request):
-    return todo_list(request)
+    print(f'----------------Request {request}----------------------------')
+    return await todo_list(request)
 
 
 #POST Requests Method
