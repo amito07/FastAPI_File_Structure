@@ -9,7 +9,7 @@ userRouter = APIRouter(tags=['User'], prefix='/user')
 
 @userRouter.post("/signUp")
 async def createUser(user:SignUpBaseModel):
-    return signUpUser(user)
+    return await signUpUser(user)
 
 
 #POST Requests Method
