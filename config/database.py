@@ -1,12 +1,27 @@
-import os
-from motor.motor_asyncio import AsyncIOMotorClient
+
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from dotenv import load_dotenv
+import os
+
+
 load_dotenv()
 
-client = AsyncIOMotorClient(f"mongodb+srv://{os.getenv('MONGODB_USER')}:{os.getenv('MONGODB_PASSWORD')}@kadodo.10zyvec.mongodb.net/?retryWrites=true&w=majority&appName={os.getenv('APP_NAME')}")
 
-db = client.todo_db
+#engine object to connect to db
+engine = create_async_engine(url= os.getenv('DATABASE_URL'), echo = True)
+SessionLocal = async_sessionmaker(engine)
 
-collection_name = db["todo_collection"]
-user_collection = db["user_collection"]
+class Base(DeclarativeBase):
+    pass
+
+async def get_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        await db.close()
 

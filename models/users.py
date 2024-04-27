@@ -1,12 +1,12 @@
-from pydantic import BaseModel
+from sqlalchemy import Column
+from sqlalchemy.sql.sqltypes import Integer,String
+from sqlalchemy.orm import Mapped
 
-class SignUpBaseModel(BaseModel):
-    username: str
-    password: str
-    email: str
-    full_name: str
+from config.database import Base
 
-class SignInModel(BaseModel):
-    username: str
-    password: str
-
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    username: Mapped[str] = Column(String, unique=True)
+    email: Mapped[str] = Column(String, unique=True)
+    password: Mapped[str] = Column(String)
