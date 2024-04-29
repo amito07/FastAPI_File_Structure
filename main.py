@@ -1,9 +1,15 @@
 from fastapi import FastAPI
-# from routes.route import router
+from contextlib import asynccontextmanager
 from routes.userRoute import userRouter
+from config.database import engine, Base
 
 app = FastAPI()
 
-# app.include_router(router)
+##This function will be called before the application is initialized
+@asynccontextmanager
+async def startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        
 app.include_router(userRouter)
 

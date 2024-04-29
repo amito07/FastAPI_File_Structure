@@ -1,47 +1,46 @@
-# from models.users import SignUpBaseModel, SignInModel
-from utils.function import hash_password
-# from config.database import user_collection
-from fastapi import Depends
-from config.database import get_db
+from typing import List, Optional
+from sqlalchemy.future import select
+from sqlalchemy.orm import Session
 from models.users import User
-from utils.customResponse import InternalServerError, CustomMessage
 from schema.UserSchema import SignInSchema, SignUpSchema
-from sqlalchemy.ext.asyncio import AsyncSession
+from utils.function import hash_password, verify_password, create_access_token
+from utils.customResponse import InternalServerError, CustomMessage
 
+class UserController():
+    def __init__(self, db_session: Session) -> None:
+        self.db_session = db_session
 
-async def signUpUser(user: SignUpSchema, db: AsyncSession = Depends(get_db)):
-    try:
-        userInfo = dict(user)
-        hashed_password = hash_password(userInfo['password'])
-        userInfo['password'] = hashed_password
-        db_user = User(**userInfo)
-        db.add(db_user)
-        await db.commit()
-        await db.refresh(db_user)
-        return CustomMessage(message='User Created')
-    except Exception as e:
-        raise InternalServerError()
+    async def singUpUser(self, user: SignUpSchema):
+        try:
+            userInfo = dict(user)
+            hashed_password = hash_password(userInfo['password'])
+            userInfo['password'] = hashed_password
+            db_user = User(**userInfo)
+            self.db_session.add(db_user)
+            await self.db_session.flush()
+        
+        except Exception as e:
+            raise InternalServerError()
+    
+    async def singInUser(self, user: SignInSchema):
+        try:
+            userInfo = dict(user)
+            user = await self.db_session.execute(select(User).filter(User.username == userInfo["username"]))
+            userDetails = user.scalar()
 
-async def signInUser(user: SignUpSchema, db: AsyncSession = Depends(get_db)):
-    try:
-        userInfo = dict(user)
+            token_data = {
+                'username': userDetails.username,
+                'email': userDetails.email
+            }
 
-        # result =  db.query(User).filter(User.username == userInfo["username"]).first()
-        # result = await db.query(User).filter(User.username == userInfo["username"]).first()
-        result = db.get_one(User, User.username == userInfo["username"])
-        # db.get_one(User, )
-        print(f'---------user: {result}----------------')
-        # user = await user_collection.find_one({'username': userInfo['username']})
-        # if user:
-        #     if verify_password(userInfo['password'], user["password"]):
-        #         del user['password']
-        #         del user['_id']
-        #         token = create_access_token(user)
-        #         user_details = {'user_name': user['username'], 'email': user['email'], 'access_token': token}
-        #         return CustomMessage(message='Logged In Successfully', data=user_details) 
-        #     else:
-        #         raise Exception('Invalid username or email')                
-    except Exception as e:
-        print(e)
-        raise InternalServerError()
-    return user
+            if user:
+                if verify_password(userInfo['password'], userDetails.password):
+                    token = create_access_token(token_data)
+                    user_details = {'user_name': userDetails.username, 'email': userDetails.email, 'access_token': token}
+                    return CustomMessage(message='Logged In Successfully', data=user_details) 
+                else:
+                    raise Exception('Invalid username or email')  
+        
+        except Exception as e:
+            print(e)
+            raise InternalServerError()

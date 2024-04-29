@@ -1,24 +1,27 @@
-import os
 from fastapi import APIRouter, Depends
-# from models.users import SignUpBaseModel, SignInModel
 from schema.UserSchema import SignUpSchema, SignInSchema
-from sqlalchemy.ext.asyncio import AsyncSession
-from config.database import get_db
+from controllers.userController import UserController
+from config.database import async_session
 
-from controllers.userController import signUpUser, signInUser
+
+
 userRouter = APIRouter(tags=['User'], prefix='/user')
 
-#POST Requests Method
+#SignUp Requests
 
 @userRouter.post("/signUp")
-async def createUser(user:SignUpSchema, db: AsyncSession = Depends(get_db)):
-    print(f'---------------User: {user}-------------------------')
-    result = await signUpUser(user, db)
-    return result
+async def createUser(user:SignUpSchema):
+    async with async_session() as session:
+        async with session.begin():
+            user_info = UserController(session)
+            return await user_info.singUpUser(user)
 
 
-#POST Requests Method
+#SignIn Requests
 
 @userRouter.post("/signIn") 
 async def loginUser(user:SignInSchema):
-    return await signInUser(user)
+    async with async_session() as session:
+        async with session.begin():
+            user_info = UserController(session)
+            return await user_info.singInUser(user)
