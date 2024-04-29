@@ -7,9 +7,11 @@ async def signUpUser(user: SignUpBaseModel):
         userInfo = dict(user)
         hashed_password = hash_password(userInfo['password'])
         userInfo['password'] = hashed_password
+        print(f'-----------------userInfo: {userInfo}---------------')
         await user_collection.insert_one(userInfo)
         return CustomMessage(message='User Created')
     except Exception as e:
+        print(f'-----------Error: {e}------------')
         raise InternalServerError()
 
 async def signInUser(user: SignInModel):
